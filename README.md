@@ -34,7 +34,7 @@ A interface permite cadastrar, listar, editar e excluir livros. Os dados sao man
 
 ### 1. Entrar na pasta do projeto
 
-Clone o repositorio ou baixe o ZIP do GitHub. Depois, abra a pasta no VS Code e use o terminal integrado.
+Clone o repositorio ou baixe o ZIP do GitHub, na opção "Código" --> opção "Baixar ZIP". Depois, abra a pasta no VS Code e use o terminal integrado.
 
 ```powershell
 cd caminho\onde\voce\baixou\controle-de-livros
