@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Livros</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main>
+    <!-- Título principal da interface de controle de livros. -->
+    <h1>Controle de Livros</h1>
+
+    <!-- Formulário usado para cadastrar ou editar um livro. -->
+    <form id="form-livro">
+      <input type="text" id="titulo" placeholder="Título do livro" required>
+      <input type="number" id="nota" placeholder="Nota" min="0" max="5" step="0.1" required>
+      <button id="botao-salvar" type="submit">Adicionar</button>
+    </form>
+
+    <!-- Área onde Loading, Success e Error serão exibidos dinamicamente. -->
+    <div id="app-estado"></div>
+  </main>
+
+  <!-- Importa o serviço TypeScript já compilado em api.js como módulo. -->
+  <script type="module">
+    import { listar, criar, atualizar, deletar } from "./api.js";
+
+    // Guarda referências aos elementos fixos da página.
+    const container = document.getElementById('app-estado');
+    const form = document.getElementById('form-livro');
+    const tituloInput = document.getElementById('titulo');
+    const notaInput = document.getElementById('nota');
+    const botaoSalvar = document.getElementById('botao-salvar');
+    let idEmEdicao = null;
+
+    // Converte um erro desconhecido em texto seguro para o usuário.
+    function mensagemErro(erro) {
+      return erro instanceof Error ? erro.message : "Não foi possível conectar ao servidor.";
+    }
+
+    // Gerencia os três estados obrigatórios da interface.
+    async function carregarTela() {
+      // Estado Loading: aparece antes da chamada listar aguardar o resultado.
+      container.innerHTML = '<p class="loading">⏳ Carregando livros...</p>';
+
+      try {
+        const livros = await listar();
+
+        // Estado Success com aviso para o caso especial de lista vazia.
+        if (livros.length === 0) {
+          container.innerHTML = '<p>Nenhum livro cadastrado.</p>';
+          return;
+        }
+
+        // Cria os elementos da lista sem injetar HTML direto dos dados digitados.
+        const lista = document.createElement('ul');
+        for (const livro of livros) {
+          const item = document.createElement('li');
+
+          const texto = document.createElement('span');
+          texto.textContent = `${livro.titulo} — Nota: ${livro.nota.toFixed(1)}`;
+
+          const acoes = document.createElement('div');
+          acoes.className = 'acoes';
+
+          // Botão Editar inicia o modo de edição usando data-id.
+          const botaoEditar = document.createElement('button');
+          botaoEditar.type = 'button';
+          botaoEditar.className = 'editar';
+          botaoEditar.textContent = 'Editar';
+          botaoEditar.dataset.id = String(livro.id);
+          botaoEditar.addEventListener('click', () => iniciarEdicao(livro.id, livro.titulo, livro.nota));
+
+          // Botão Excluir usa o data-id vinculado ao registro.
+          const botaoExcluir = document.createElement('button');
+          botaoExcluir.type = 'button';
+          botaoExcluir.className = 'excluir';
+          botaoExcluir.textContent = 'Excluir';
+          botaoExcluir.dataset.id = String(livro.id);
+          botaoExcluir.addEventListener('click', async () => {
+            try {
+              await deletar(livro.id);
+              await carregarTela();
+            } catch (erro) {
+              alert(mensagemErro(erro));
+            }
+          });
+
+          acoes.append(botaoEditar, botaoExcluir);
+          item.append(texto, acoes);
+          lista.append(item);
+        }
+
+        container.replaceChildren(lista);
+      } catch (erro) {
+        // Estado Error: informa o problema e permite tentar novamente.
+        const painel = document.createElement('div');
+        painel.className = 'error';
+        painel.append(document.createTextNode(`⚠️ ${mensagemErro(erro)} `));
+
+        const botaoTentar = document.createElement('button');
+        botaoTentar.type = 'button';
+        botaoTentar.textContent = 'Tentar novamente';
+        botaoTentar.addEventListener('click', carregarTela);
+        painel.append(botaoTentar);
+        container.replaceChildren(painel);
+      }
+    }
+
+    // Preenche o formulário para editar o livro selecionado.
+    function iniciarEdicao(id, titulo, nota) {
+      idEmEdicao = id;
+      tituloInput.value = titulo;
+      notaInput.value = String(nota);
+      botaoSalvar.textContent = 'Salvar edição';
+      tituloInput.focus();
+    }
+
+    // Intercepta o envio para cadastro ou edição sem recarregar a página.
+    form.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+
+      const dados = {
+        titulo: tituloInput.value,
+        nota: Number(notaInput.value),
+      };
+
+      try {
+        if (idEmEdicao === null) {
+          await criar(dados);
+        } else {
+          await atualizar(idEmEdicao, dados);
+        }
+
+        form.reset();
+        idEmEdicao = null;
+        botaoSalvar.textContent = 'Adicionar';
+        await carregarTela();
+      } catch (erro) {
+        // Feedback amigável também é exibido quando a API rejeita os dados.
+        alert(mensagemErro(erro));
+      }
+    });
+
+    // Carrega automaticamente a lista assim que o módulo é iniciado.
+    carregarTela();
+  </script>
+</body>
+</html>
