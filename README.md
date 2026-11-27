@@ -28,17 +28,79 @@ A interface permite cadastrar, listar, editar e excluir livros. Os dados sao man
 
 ### Requisitos
 
-- Node.js instalado
-- npm instalado
+- Node.js instalado (versao recomendada: 20 ou superior)
+- npm instalado junto com o Node.js
+- Terminal PowerShell, CMD ou integrado do VS Code
 
-### Instalacao e inicializacao
+### 1. Entrar na pasta do projeto
 
-```bash
+Clone o repositorio ou baixe o ZIP do GitHub. Depois, abra a pasta no VS Code e use o terminal integrado.
+
+```powershell
+cd caminho\onde\voce\baixou\controle-de-livros
+```
+
+Se o terminal ja estiver aberto dentro da pasta do projeto, pule esta etapa.
+
+Para clonar diretamente:
+
+```powershell
+git clone https://github.com/thiago-dio-004/controle-de-livros.git
+cd controle-de-livros
+```
+
+### 2. Instalar as dependencias
+
+```powershell
 npm install
+```
+
+O comando cria a pasta `node_modules` e instala o Express, o TypeScript e as dependencias de desenvolvimento.
+
+### 3. Compilar o TypeScript
+
+```powershell
+npm run build
+```
+
+Esse comando usa o `tsconfig.json` e gera os arquivos JavaScript executaveis `server.js` e `api.js`.
+
+### 4. Iniciar o servidor
+
+```powershell
 npm start
 ```
 
-Abra <http://localhost:3000> no navegador.
+O servidor sera iniciado em modo de desenvolvimento e ficara observando o arquivo `server.ts`.
+
+### 5. Abrir a aplicacao
+
+Acesse <http://localhost:3000> no navegador.
+
+Para parar o servidor, pressione `Ctrl+C` no terminal.
+
+### Executar em outro terminal
+
+Depois de iniciar o servidor, abra um segundo terminal para testar a API:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/livros"
+```
+
+Exemplo para criar um livro:
+
+```powershell
+$dados = @{
+    titulo = "Dom Casmurro"
+    nota = 4.7
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Uri "http://localhost:3000/api/livros" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $dados
+```
 
 ## Endpoints da API
 
